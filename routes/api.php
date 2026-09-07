@@ -8,6 +8,6 @@ Route::post('api/register', [AuthController::class, 'register']);
 
 Route::post('api/login', [AuthController::class, 'login']);
 
-Route::prefix('')->middleware('auth:api')->group(function () {
+Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::post('api/logout', [AuthController::class, 'logout']);
 });

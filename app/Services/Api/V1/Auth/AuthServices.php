@@ -50,16 +50,18 @@ class AuthServices
     }
     public function logout($user)
     {
-        if ($user && method_exists($user, 'tokens')) {
-            $tokens = $user->tokens();
+        $tokenCount = $user->tokens()->count();
 
-            if ($tokens && $tokens->getQuery() !== null) {
-                $tokens->delete();
-            }
+        if ($tokenCount > 0) {
+            $user->tokens()->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'logged out successfully',
+            ], 200);
         }
         return response()->json([
-            'success' => true,
-            'message' => 'logged out successfully',
-        ], 200);
+            'success' => false,
+            'message' => 'No active sessions found',
+        ], 401);
     }
 }

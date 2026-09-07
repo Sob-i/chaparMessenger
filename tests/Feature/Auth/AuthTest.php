@@ -133,3 +133,21 @@ test('user can logout', function () {
 
 });
 
+test('logged out user cant use logout again', function () {
+
+    $user = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $response = $this->postJson('/api/logout',[$user]);
+
+    $response->assertStatus(401)
+        ->assertJson([
+            "message" => "Unauthenticated."
+        ]);
+
+    $this->assertDatabaseCount('personal_access_tokens', 0);
+});
+
