@@ -61,7 +61,7 @@ class ChatServices
     }
     public function GetChatMessages($chatId)
     {
-        return ChatMessagesModel::where('chain_id' , $chatId)->orderBy('created_at' , 'DESC')->get();
+        return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name'])->get();
     }
     public function SendMessage(array $data)
     {

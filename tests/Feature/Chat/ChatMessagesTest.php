@@ -198,3 +198,133 @@ test('user can send message to a chat with attachment', function(){
     $responseMessage->assertJsonPath('data.attachments', $fileUrl);
 
 });
+
+test('user can get chat messages', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user1->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'member',
+    ]);
+
+
+
+    $responseMessage = $this->postJson('api/chat/send-message' , [
+        'chat_id' => $response->json('data.id'),
+        'sender_id' => $user1->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseMessage2 = $this->postJson('api/chat/send-message' , [
+        'chat_id' => $response->json('data.id'),
+        'sender_id' => $user2->id ,
+        'receiver_id' => $user1->id ,
+        'message' => 'second message' ,
+        'attachments' => null ,
+        'type' => 'reply' ,
+    ]);
+
+    $responseMessage->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'message sent successfully',
+            'data' => $responseMessage->json('data')
+        ]);
+
+    $this->assertDatabaseHas('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user1->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $id = $response->json('data.id');
+
+
+
+    $responseGetMessage = $this->getJson("api/chat/$id");
+
+    $responseGetMessage->assertStatus(200)
+        ->assertJsonFragment([
+            'success' => true,
+        ])
+        ->assertJsonFragment([
+            'chat_id' => $response->json('data.id'),
+            'sender_id' => $user1->id,
+            'receiver_id' => $user2->id,
+            'message' => 'first message',
+            'type' => 'message',
+        ])
+        ->assertJsonFragment([
+            'chat_id' => $response->json('data.id'),
+            'sender_id' => $user2->id,
+            'receiver_id' => $user1->id,
+            'message' => 'second message',
+            'type' => 'reply',
+        ]);
+
+    $responseGetMessage->assertJsonStructure([
+        'success',
+        'messages' => [
+            '*' => [
+                'id',
+                'chat_id',
+                'sender_id',
+                'receiver_id',
+                'message',
+                'attachments',
+                'type',
+                'created_at',
+                'updated_at',
+                'sender_info' => [
+                    'id',
+                    'name',
+                ],
+                'receiver_info' => [
+                    'id',
+                    'name',
+                ],
+            ]
+        ]
+    ]);
+});

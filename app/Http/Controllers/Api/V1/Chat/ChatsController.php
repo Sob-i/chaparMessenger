@@ -71,16 +71,17 @@ class ChatsController extends Controller
     public function getChatMessages($chatId)
     {
         $messages = $this->chatServices->GetChatMessages($chatId);
+
         if ($messages) {
             return response()->json([
                 'success' => true,
                 'messages' => $messages
-            ]);
+            ],200);
         }
         return response()->json([
             'success' => false,
             'message' => 'could not find any message',
-        ]);
+        ],401);
     }
     public function sendMessage(SendMessageRequest $request)
     {
