@@ -34,7 +34,7 @@ test('user can create private chat without a name', function(){
         'success' => true,
         'message' => 'chat created successfully',
         'data' => [
-            'id' => '1',
+            'id' => $response->json('data.id'),
             'type' => 'private',
             'name' => null,
         ],
@@ -42,12 +42,12 @@ test('user can create private chat without a name', function(){
     ]);
 
     $this->assertDatabaseHas('chats', [
-        'id' => '1',
+        'id' => $response->json('data.id'),
         'type' => 'private',
     ]);
 
     $this->assertDatabaseHas('chat_members', [
-        'chat_id' => '1',
+        'chat_id' => $response->json('data.id'),
         'user_id' => $user2->id,
         'type' => 'member',
     ]);

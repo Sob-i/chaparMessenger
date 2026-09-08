@@ -2,7 +2,9 @@
 
 namespace App\Services\Api\V1\chat;
 
+use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Models\ChatMembersModel;
+use App\Models\ChatMessagesModel;
 use App\Models\ChatModel;
 
 class ChatServices
@@ -56,5 +58,20 @@ class ChatServices
             return $Ids;
         }
         return null;
+    }
+    public function GetChatMessages($chatId)
+    {
+        return ChatMessagesModel::where('chain_id' , $chatId)->orderBy('created_at' , 'DESC')->get();
+    }
+    public function SendMessage(array $data)
+    {
+        return ChatMessagesModel::create([
+            'chat_id' => $data['chat_id'],
+            'sender_id' => $data['sender_id'],
+            'receiver_id' => $data['receiver_id'],
+            'message' => $data['message'] ?? null,
+            'attachments' => $data['attachments'] ?? null,
+            'type' => $data['type'],
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Chat;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\CreateChatRequest;
+use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Services\Api\V1\chat\ChatServices;
 
 class ChatsController extends Controller
@@ -66,5 +67,38 @@ class ChatsController extends Controller
             'success' => false,
             'message' => 'could not find any chats',
         ]);
+    }
+    public function getChatMessages($chatId)
+    {
+        $messages = $this->chatServices->GetChatMessages($chatId);
+        if ($messages) {
+            return response()->json([
+                'success' => true,
+                'messages' => $messages
+            ]);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'could not find any message',
+        ]);
+    }
+    public function sendMessage(SendMessageRequest $request)
+    {
+        $data = $request->validated();
+
+        $sentMessage = $this->chatServices->SendMessage($data);
+
+        if ($sentMessage) {
+            return response()->json([
+                'success' => true,
+                'message' => 'message sent successfully',
+                'data' => $sentMessage,
+            ],201);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'could not create message',
+        ],401);
     }
 }
