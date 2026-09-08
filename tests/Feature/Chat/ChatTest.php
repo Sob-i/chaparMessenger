@@ -49,6 +49,7 @@ test('user can create private chat without a name', function(){
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => '1',
         'user_id' => $user2->id,
+        'type' => 'member',
     ]);
 });
 
@@ -84,7 +85,7 @@ test('user can create group chat with a name', function(){
         'success' => true,
         'message' => 'chat created successfully',
         'data' => [
-            'id' => '2',
+            'id' => $response->json('data.id'),
             'type' => 'group',
             'name' => 'group chat 1',
         ],
@@ -92,7 +93,7 @@ test('user can create group chat with a name', function(){
     ]);
 
     $this->assertDatabaseHas('chats', [
-        'id' => '2',
+        'id' => $response->json('data.id'),
         'type' => 'group',
     ]);
 });
@@ -104,7 +105,6 @@ test('user can create channel with a name', function(){
         'email' => 'john@example.com',
         'password' =>Hash::make('Password1234!'),
     ]);
-
 
     $this->actingAs($user1);
 
@@ -118,7 +118,7 @@ test('user can create channel with a name', function(){
             'success' => true,
             'message' => 'chat created successfully',
             'data' => [
-                'id' => '3',
+                'id' => $response->json('data.id'),
                 'type' => 'channel',
                 'name' => 'mmd',
             ],
@@ -126,12 +126,13 @@ test('user can create channel with a name', function(){
         ]);
 
     $this->assertDatabaseHas('chats', [
-        'id' => '3',
+        'id' => $response->json('data.id'),
         'type' => 'channel',
     ]);
-    $this->assertDatabaseHas('channel_members', [
-        'chat_id' => '3',
-        'user_id' => '6',
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
         'type' => 'admin'
     ]);
 });
@@ -172,4 +173,101 @@ test('user cant create a group chat or channel without a name', function () {
         'id' => '4',
         'type' => 'group',
     ]);
+});
+
+test('user can get its chats', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' => Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' => Hash::make('Password12366784!'),
+    ]);
+
+    $user3 = User::factory()->create([
+        'name' => 'mark specter',
+        'email' => 'moon@knight.com',
+        'password' => Hash::make('Password1236adawd6784!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $response = $this->postJson('api/chat/create/' . json_encode([$user1->id, $user2->id, $user3->id]), [
+        'type' => 'group',
+        'name' => 'dek to archang',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+        ]);
+
+    $chatId = $response->json('data.id');
+
+    $response->assertJson([
+        'data' => [
+            'id' => $chatId,
+            'type' => 'group',
+            'name' => 'dek to archang',
+        ],
+        'members' => [$user1->id, $user2->id, $user3->id]
+    ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $chatId,
+        'type' => 'group',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $chatId,
+        'user_id' => $user1->id,
+    ]);
+
+    $response = $this->postJson('api/chat/create/' . json_encode([$user1->id, $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+        ]);
+
+    $chatId2 = $response->json('data.id');
+
+    $response->assertJson([
+        'data' => [
+            'id' => $chatId2,
+            'type' => 'private',
+            'name' => null,
+        ],
+        'members' => [
+            $user1->id,
+            $user2->id
+        ]
+    ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $chatId2,
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $chatId2,
+        'user_id' => $user1->id,
+    ]);
+
+    $response = $this->getJson('api/chats');
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+        ]);
+
 });

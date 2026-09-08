@@ -27,10 +27,11 @@ class ChatsController extends Controller
         $createdChat = $this->chatServices->CreateChat($data);
 
         if ($createdChat) {
+            $type = 'admin';
             if ($createdChat->type == 'channel') {
-                $members = $this->chatServices->CreateChnnelAdmins($createdChat->id,$memberId);
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$type);
             }else{
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId);
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$data['type'] == 'private' ? 'member' : $type);
             }
 
             return response()->json([

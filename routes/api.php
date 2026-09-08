@@ -16,7 +16,7 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::post('api/logout', [AuthController::class, 'logout']);
 
     // chats
-    Route::get('api/chats', [ChatsController::class, 'chat']);
+    Route::get('api/chats', [ChatsController::class, 'getChats']);
     Route::post('api/chat/create/{membersId}', [ChatsController::class, 'createChat']);
 
     // chat messages
