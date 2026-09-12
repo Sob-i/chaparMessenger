@@ -74,4 +74,22 @@ class ChatServices
             'type' => $data['type'],
         ]);
     }
+    public function EditMessage(array $data)
+    {
+        $message = ChatMessagesModel::where('id',$data['id'])->where('chat_id',$data['chat_id'])->where('sender_id' , auth()->id())->firstOrFail();
+
+        if ($message->message != $data['message']) {
+
+            $message->update([
+                'message' => $data['message']
+            ]);
+            return [
+                'id' => $message['id'],
+                'chat_id' => $message['chat_id'],
+                'sender_id' => $message['sender_id'],
+                'receiver_id' => $message['receiver_id'],
+                'message' => $data['message'],
+            ];
+        }
+    }
 }

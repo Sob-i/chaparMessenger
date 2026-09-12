@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Chat;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\CreateChatRequest;
+use App\Http\Requests\Api\V1\EditMessageRequest;
 use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Services\Api\V1\chat\ChatServices;
 
@@ -101,5 +102,22 @@ class ChatsController extends Controller
             'success' => false,
             'message' => 'could not create message',
         ],401);
+    }
+    public function editMessage(EditMessageRequest $request)
+    {
+        $data = $request->validated();
+
+        $updatedMessage = $this->chatServices->EditMessage($data);
+
+        if ($updatedMessage) {
+            return response()->json([
+                'success' => true,
+                'message' => $updatedMessage,
+            ],201);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'could not edit message',
+        ],406);
     }
 }
