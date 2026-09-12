@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Chat;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\CreateChatRequest;
+use App\Http\Requests\Api\V1\DeleteMessageRequest;
 use App\Http\Requests\Api\V1\EditMessageRequest;
 use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Services\Api\V1\chat\ChatServices;
@@ -118,6 +119,23 @@ class ChatsController extends Controller
         return response()->json([
             'success' => false,
             'message' => 'could not edit message',
+        ],406);
+    }
+    public function deleteMessage(DeleteMessageRequest $request)
+    {
+        $data = $request->validated();
+
+        $deletedMessage = $this->chatServices->DeleteMessage($data);
+
+        if ($deletedMessage) {
+            return response()->json([
+                'success' => true,
+                'message' => 'message deleted successfully',
+            ],201);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'could not delete message',
         ],406);
     }
 }

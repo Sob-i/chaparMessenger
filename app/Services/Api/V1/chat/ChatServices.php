@@ -2,6 +2,7 @@
 
 namespace App\Services\Api\V1\chat;
 
+use App\Http\Requests\Api\V1\DeleteMessageRequest;
 use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Models\ChatMembersModel;
 use App\Models\ChatMessagesModel;
@@ -91,5 +92,11 @@ class ChatServices
                 'message' => $data['message'],
             ];
         }
+    }
+    public function DeleteMessage(array $data)
+    {
+        $message = ChatMessagesModel::where('id',$data['id'])->where('chat_id',$data['chat_id'])->where('sender_id' , auth()->id())->firstOrFail();
+
+        return $message->delete();
     }
 }

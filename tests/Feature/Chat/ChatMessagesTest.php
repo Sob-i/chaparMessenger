@@ -504,3 +504,175 @@ test('user cant edit someone else message', function () {
         'message' => 'trying to edit message user 2' ,
     ]);
 });
+
+test('user can delete its message', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user1->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'member',
+    ]);
+
+    $responseMessage = $this->postJson('api/chat/send-message' , [
+        'chat_id' => $response->json('data.id'),
+        'sender_id' => $user1->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseMessage->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'message sent successfully',
+            'data' => $responseMessage->json('data')
+        ]);
+
+    $this->assertDatabaseHas('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user1->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseDeleteMessage = $this->deleteJson('api/chat/delete-message',[
+        'user_id' => $user1->id,
+        'id' => $responseMessage->json('data.id'),
+        'chat_id' => $response->json('data.id'),
+    ]);
+
+    $responseDeleteMessage->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'message deleted successfully',
+        ]);
+
+    $this->assertDatabaseMissing('chat_messages', [
+        'id' => $responseMessage->json('data.id'),
+        'chat_id' => $response->json('data.id') ,
+        'message' => 'first message' ,
+    ]);
+
+});
+
+test('user cant delete someone else message', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user1->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'member',
+    ]);
+
+    $responseMessage = $this->postJson('api/chat/send-message' , [
+        'chat_id' => $response->json('data.id'),
+        'sender_id' => $user2->id ,
+        'receiver_id' => $user1->id ,
+        'message' => 'user2 message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseMessage->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'message sent successfully',
+            'data' => $responseMessage->json('data')
+        ]);
+
+    $this->assertDatabaseHas('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user2->id ,
+        'receiver_id' => $user1->id ,
+        'message' => 'user2 message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseDeleteMessage = $this->deleteJson('api/chat/delete-message',[
+        'user_id' => $user1->id,
+        'id' => $responseMessage->json('data.id'),
+        'chat_id' => $response->json('data.id'),
+    ]);
+
+    $responseDeleteMessage->assertStatus(404);
+
+    $this->assertDatabaseHas('chat_messages', [
+        'id' => $responseMessage->json('data.id'),
+        'chat_id' => $response->json('data.id') ,
+        'message' => 'user2 message' ,
+    ]);
+
+});
