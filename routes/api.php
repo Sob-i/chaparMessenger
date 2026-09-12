@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Chat\ChatsController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\User\UserProfileController;
 
     // register
     Route::post('api/register', [AuthController::class, 'register']);
@@ -24,4 +25,8 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::post('api/chat/send-message', [ChatsController::class, 'sendMessage']);
     Route::put('api/chat/{id}/edit-message/{messageId}', [ChatsController::class, 'chat.edit.message']);
     Route::delete('api/chat/{id}/delete-message/{messageId}', [ChatsController::class, 'chat.delete.message']);
+
+    // user profile
+    Route::get('api/user_profile', [UserProfileController::class, 'getProfile']);
+    Route::put('api/user_profile/edit', [UserProfileController::class, 'editProfile']);
 });
