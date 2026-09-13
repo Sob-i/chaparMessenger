@@ -320,6 +320,7 @@ test('user can get chat messages', function () {
         'type' => 'member',
     ]);
 
+    $this->actingAs($user1);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
@@ -329,6 +330,8 @@ test('user can get chat messages', function () {
         'attachments' => null ,
         'type' => 'message' ,
     ]);
+
+    $this->actingAs($user2);
 
     $responseMessage2 = $this->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
@@ -527,7 +530,7 @@ test('user cant edit someone else message', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $this->actingAs($user2);
 
     $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
         'type' => 'private',
@@ -580,6 +583,8 @@ test('user cant edit someone else message', function () {
         'attachments' => null ,
         'type' => 'message' ,
     ]);
+
+    $this->actingAs($user1);
 
     $responseEditMessage = $this->putJson('api/chat/edit-message',[
         'id' => $responseMessage->json('data.id'),
@@ -698,7 +703,7 @@ test('user cant delete someone else message', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $this->actingAs($user2);
 
     $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
         'type' => 'private',
@@ -751,6 +756,8 @@ test('user cant delete someone else message', function () {
         'attachments' => null ,
         'type' => 'message' ,
     ]);
+
+    $this->actingAs($user1);
 
     $responseDeleteMessage = $this->deleteJson('api/chat/delete-message',[
         'user_id' => $user1->id,
