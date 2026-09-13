@@ -29,6 +29,8 @@ class SendMessageRequest extends FormRequest
             'message' => 'nullable|string|min:1',
             'attachments' => 'nullable|url',
             'type' => 'required|string|in:message,reply',
+            'reply_to_message' => 'nullable|integer|exists:chat_messages,id',
+            'reply_to_user' => 'nullable|integer|exists:users,id',
         ];
     }
 }

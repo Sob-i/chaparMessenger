@@ -243,7 +243,6 @@ test('user can get chat messages', function () {
     ]);
 
 
-
     $responseMessage = $this->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
         'sender_id' => $user1->id ,
@@ -260,6 +259,8 @@ test('user can get chat messages', function () {
         'message' => 'second message' ,
         'attachments' => null ,
         'type' => 'reply' ,
+        'reply_to_message' => $responseMessage->json('data.id') ,
+        'reply_to_user' => $user1->id,
     ]);
 
     $responseMessage->assertStatus(201)
@@ -281,7 +282,6 @@ test('user can get chat messages', function () {
     $id = $response->json('data.id');
 
 
-
     $responseGetMessage = $this->getJson("api/chat/$id");
 
     $responseGetMessage->assertStatus(200)
@@ -299,8 +299,18 @@ test('user can get chat messages', function () {
             'chat_id' => $response->json('data.id'),
             'sender_id' => $user2->id,
             'receiver_id' => $user1->id,
+            'message' => 'first message',
+            'type' => 'message',
+            'reply_to_message' => null,
+            'reply_to_user' => null,
+        ])->assertJsonFragment([
+            'chat_id' => $response->json('data.id'),
+            'sender_id' => $user2->id,
+            'receiver_id' => $user1->id,
             'message' => 'second message',
             'type' => 'reply',
+            'reply_to_message' => $responseMessage->json('data.id') ,
+            'reply_to_user' => $user1->id,
         ]);
 
     $responseGetMessage->assertJsonStructure([
@@ -324,6 +334,8 @@ test('user can get chat messages', function () {
                     'id',
                     'name',
                 ],
+                'reply_to_message' ,
+                'reply_to_user' ,
             ]
         ]
     ]);

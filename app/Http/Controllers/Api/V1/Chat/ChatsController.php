@@ -16,7 +16,7 @@ class ChatsController extends Controller
 
     }
 
-    public function createChat(CreateChatRequest $request , $memberId = null)
+    public function createChat(CreateChatRequest $request , $memberId)
     {
         $data = $request->validated();
 

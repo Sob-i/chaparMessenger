@@ -43,6 +43,10 @@ class ChatServices
 
             $memberIds = json_decode($MemberId,true);
 
+            if ($type == 'private' and count($memberIds) > 2 ) {
+                return false;
+            }
+
             foreach ($memberIds as $memberId) {
                 $createdMembers [] = ChatMembersModel::create([
                     'chat_id' => $chatId,
@@ -62,18 +66,32 @@ class ChatServices
     }
     public function GetChatMessages($chatId)
     {
-        return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name'])->get();
+        return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name','repliedMessageInfo:id,sender_id,message,attachments'])->get();
     }
     public function SendMessage(array $data)
     {
-        return ChatMessagesModel::create([
-            'chat_id' => $data['chat_id'],
-            'sender_id' => $data['sender_id'],
-            'receiver_id' => $data['receiver_id'],
-            'message' => $data['message'] ?? null,
-            'attachments' => $data['attachments'] ?? null,
-            'type' => $data['type'],
-        ]);
+        if ($data['type'] == 'message') {
+            return ChatMessagesModel::create([
+                'chat_id' => $data['chat_id'],
+                'sender_id' => $data['sender_id'],
+                'receiver_id' => $data['receiver_id'],
+                'message' => $data['message'] ?? null,
+                'attachments' => $data['attachments'] ?? null,
+                'type' => $data['type'],
+            ]);
+        }else{
+            return ChatMessagesModel::create([
+                'chat_id' => $data['chat_id'],
+                'sender_id' => $data['sender_id'],
+                'receiver_id' => $data['receiver_id'],
+                'message' => $data['message'] ?? null,
+                'attachments' => $data['attachments'] ?? null,
+                'type' => $data['type'],
+                'reply_to_message' => $data['reply_to_message'],
+                'reply_to_user' => $data['reply_to_user'],
+                ]);
+        }
+
     }
     public function EditMessage(array $data)
     {
