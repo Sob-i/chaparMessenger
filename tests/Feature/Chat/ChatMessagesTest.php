@@ -199,6 +199,84 @@ test('user can send message to a chat with attachment', function(){
 
 });
 
+test('user cant send message using another user id', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $user3 = User::factory()->create([
+        'name' => 'moonKnight',
+        'email' => 'mark@mk.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user1->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'member',
+    ]);
+
+    $responseMessage = $this->postJson('api/chat/send-message' , [
+        'chat_id' => $response->json('data.id'),
+        'sender_id' => $user3->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'a message from MOOOOOOOOOOOOOOON' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseMessage->assertStatus(201)
+        ->assertJsonFragment([
+            'chat_id' => $response->json('data.id'),
+            'sender_id' => $user1->id,
+            'receiver_id' => $user2->id,
+            'message' => 'a message from MOOOOOOOOOOOOOOON',
+            'type' => 'message',
+        ]);
+
+    $this->assertDatabaseMissing('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user3->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'a message from MOOOOOOOOOOOOOOON' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+});
+
 test('user can get chat messages', function () {
 
     $user1 = User::factory()->create([
@@ -303,7 +381,8 @@ test('user can get chat messages', function () {
             'type' => 'message',
             'reply_to_message' => null,
             'reply_to_user' => null,
-        ])->assertJsonFragment([
+        ])
+        ->assertJsonFragment([
             'chat_id' => $response->json('data.id'),
             'sender_id' => $user2->id,
             'receiver_id' => $user1->id,

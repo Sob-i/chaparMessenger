@@ -89,6 +89,8 @@ class ChatsController extends Controller
     {
         $data = $request->validated();
 
+        $data['sender_id'] = auth()->id();
+
         $sentMessage = $this->chatServices->SendMessage($data);
 
         if ($sentMessage) {
