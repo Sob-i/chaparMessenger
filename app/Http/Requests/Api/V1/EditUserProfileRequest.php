@@ -24,7 +24,7 @@ class EditUserProfileRequest extends FormRequest
     {
         return [
             'user_id' => 'required|integer|exists:users,id',
-            'user_name' => 'nullable|string|min:2|max:255',
+            'user_name' => 'nullable|string|min:2|max:255|unique:users,user_name',
             'avatar' => 'nullable|url',
             'bio' => 'nullable|string|min:2',
             'phone' => 'nullable|numeric',
