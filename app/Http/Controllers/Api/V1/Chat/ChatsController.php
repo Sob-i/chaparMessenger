@@ -15,7 +15,6 @@ class ChatsController extends Controller
     {
 
     }
-
     public function createChat(CreateChatRequest $request , $memberId)
     {
         $data = $request->validated();
@@ -27,14 +26,21 @@ class ChatsController extends Controller
             ], 422);
         }
 
-        $createdChat = $this->chatServices->CreateChat($data);
+        $createdChat = $this->chatServices->CreateChat($data,$memberId);
+
+        if ($createdChat === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chat already exists',
+            ], 409);
+        }
 
         if ($createdChat) {
             $type = 'admin';
             if ($createdChat->type == 'channel') {
                 $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$type);
             }else{
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$data['type'] == 'private' ? 'member' : $type);
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$data['type'] == 'private' ? 'PrivateMember' : $type);
             }
 
             return response()->json([

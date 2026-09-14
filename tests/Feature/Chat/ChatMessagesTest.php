@@ -50,7 +50,7 @@ test('user can send message to a chat', function(){
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
@@ -120,7 +120,7 @@ test('user cant send message to a chat with invalid info', function(){
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
@@ -245,7 +245,7 @@ test('user cant send message using another user id', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
@@ -317,7 +317,7 @@ test('user can get chat messages', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $this->actingAs($user1);
@@ -463,7 +463,7 @@ test('user can edit its message', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
@@ -556,7 +556,7 @@ test('user cant edit someone else message', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
@@ -641,7 +641,7 @@ test('user can delete its message', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [
@@ -729,7 +729,7 @@ test('user cant delete someone else message', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
 
     $responseMessage = $this->postJson('api/chat/send-message' , [

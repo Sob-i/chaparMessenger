@@ -49,8 +49,46 @@ test('user can create private chat without a name', function(){
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user2->id,
-        'type' => 'member',
+        'type' => 'PrivateMember',
     ]);
+});
+
+test('user cant create same private chat twice', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $first = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $first->assertStatus(201);
+    $firstChatId = $first->json('data.id');
+
+    $second = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+        'type' => 'private',
+    ]);
+
+    $second->assertStatus(409)
+    ->assertJson([
+        'success' => false,
+        'message' => 'Chat already exists',
+    ]);
+
+    $this->assertDatabaseCount('chats', 1);
+
+    $this->assertDatabaseCount('chat_members', 2);
 });
 
 test('user can create group chat with a name', function(){

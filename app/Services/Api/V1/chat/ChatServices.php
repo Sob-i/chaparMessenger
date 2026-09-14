@@ -30,8 +30,12 @@ class ChatServices
     {
         return ChatMembersModel::where('user_id' , $userId)->orderBy('updated_at' , 'DESC')->get('chat_id')->toArray();
     }
-    public function CreateChat(?array $data)
+    public function CreateChat(?array $data , $memberId)
     {
+        if ($data['type'] == 'private' && $this->privateChatExists($memberId)) {
+           return null;
+        }
+
         return ChatModel::create([
             'type' => $data['type'],
             'name' => $data['name'] ?? null,
@@ -63,6 +67,10 @@ class ChatServices
             return $Ids;
         }
         return null;
+    }
+    private function privateChatExists($memberIds)
+    {
+        return ChatMembersModel::where('type','PrivateMember')->whereIn('user_id' , json_decode($memberIds))->exists();
     }
     public function GetChatMessages($chatId)
     {
