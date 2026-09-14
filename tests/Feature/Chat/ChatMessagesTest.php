@@ -26,7 +26,7 @@ test('user can send message to a chat', function(){
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -80,6 +80,82 @@ test('user can send message to a chat', function(){
 
 });
 
+test('user cant send message using some one else id', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $user3 = User::factory()->create([
+        'name' => 'Hacker',
+        'email' => 'hacker@hack.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $this->actingAs($user3);
+
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+        'user_id' => $user1->id,
+        'type' => 'private',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user3->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user3->id,
+        'type' => 'PrivateMember',
+    ]);
+
+    $responseMessage = $this->postJson('api/chat/send-message' , [
+        'chat_id' => $response->json('data.id'),
+        'sender_id' => $user1->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $responseMessage->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'message sent successfully',
+            'data' => $responseMessage->json('data')
+        ]);
+
+    $this->assertDatabaseHas('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user3->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+});
+
 test('user cant send message to a chat with invalid info', function(){
 
     $user1 = User::factory()->create([
@@ -96,7 +172,7 @@ test('user cant send message to a chat with invalid info', function(){
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -161,7 +237,7 @@ test('user can send message to a chat with attachment', function(){
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/' . json_encode([$user1->id, $user2->id]), [
+    $response = $this->postJson('api/chat/create/' . json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -221,7 +297,7 @@ test('user cant send message using another user id', function () {
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -293,7 +369,7 @@ test('user can get chat messages', function () {
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -439,7 +515,7 @@ test('user can edit its message', function () {
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -532,7 +608,7 @@ test('user cant edit someone else message', function () {
 
     $this->actingAs($user2);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user2->id,'member' =>$user1->id]), [
         'type' => 'private',
     ]);
 
@@ -545,7 +621,7 @@ test('user cant edit someone else message', function () {
                 'type' => 'private',
                 'name' => null,
             ],
-            'members' => [$user1->id , $user2->id]
+            'members' => [$user2->id , $user1->id]
         ]);
 
     $this->assertDatabaseHas('chats', [
@@ -617,7 +693,7 @@ test('user can delete its message', function () {
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -705,7 +781,7 @@ test('user cant delete someone else message', function () {
 
     $this->actingAs($user2);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user2->id,'member' =>$user1->id]), [
         'type' => 'private',
     ]);
 
@@ -718,7 +794,7 @@ test('user cant delete someone else message', function () {
                 'type' => 'private',
                 'name' => null,
             ],
-            'members' => [$user1->id , $user2->id]
+            'members' => [$user2->id , $user1->id]
         ]);
 
     $this->assertDatabaseHas('chats', [

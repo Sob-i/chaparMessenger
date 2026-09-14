@@ -45,13 +45,11 @@ class ChatServices
     {
         if ($MemberId) {
 
-            $memberIds = json_decode($MemberId,true);
-
-            if ($type == 'private' and count($memberIds) > 2 ) {
+            if ($type == 'private' and count($MemberId) > 2 ) {
                 return false;
             }
 
-            foreach ($memberIds as $memberId) {
+            foreach ($MemberId as $memberId) {
                 $createdMembers [] = ChatMembersModel::create([
                     'chat_id' => $chatId,
                     'user_id' => $memberId,
@@ -70,7 +68,7 @@ class ChatServices
     }
     private function privateChatExists($memberIds)
     {
-        return ChatMembersModel::where('type','PrivateMember')->whereIn('user_id' , json_decode($memberIds))->exists();
+        return ChatMembersModel::where('type','PrivateMember')->whereIn('user_id' , $memberIds)->exists();
     }
     public function GetChatMessages($chatId)
     {

@@ -26,7 +26,11 @@ class ChatsController extends Controller
             ], 422);
         }
 
-        $createdChat = $this->chatServices->CreateChat($data,$memberId);
+        $Ids = json_decode($memberId,true);
+
+        $Ids['user_id'] = auth()->id();
+
+        $createdChat = $this->chatServices->CreateChat($data,$Ids);
 
         if ($createdChat === null) {
             return response()->json([
@@ -38,9 +42,9 @@ class ChatsController extends Controller
         if ($createdChat) {
             $type = 'admin';
             if ($createdChat->type == 'channel') {
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$type);
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,$type);
             }else{
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$memberId,$data['type'] == 'private' ? 'PrivateMember' : $type);
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,$data['type'] == 'private' ? 'PrivateMember' : $type);
             }
 
             return response()->json([

@@ -25,7 +25,7 @@ test('user can create private chat without a name', function(){
 
     $this->actingAs($user1);
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
@@ -69,14 +69,14 @@ test('user cant create same private chat twice', function () {
 
     $this->actingAs($user1);
 
-    $first = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $first = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
     $first->assertStatus(201);
     $firstChatId = $first->json('data.id');
 
-    $second = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id]), [
+    $second = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
         'type' => 'private',
     ]);
 
