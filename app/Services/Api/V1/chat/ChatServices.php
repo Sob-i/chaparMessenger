@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Models\ChatMembersModel;
 use App\Models\ChatMessagesModel;
 use App\Models\ChatModel;
+use Illuminate\Http\Request;
 
 class ChatServices
 {
@@ -41,38 +42,48 @@ class ChatServices
             'name' => $data['name'] ?? null,
         ]);
     }
-    public function CreateChatMembers($chatId , $MemberId , $type)
+    public function CreateChatMembers($chatId, $MemberId, $type)
     {
-        if ($MemberId) {
+        if (! $MemberId) {
+            return null;
+        }
 
-            if ($type == 'private' and count($MemberId) > 2 ) {
-                return false;
-            }
+        if ($type === 'private' && count($MemberId) > 2) {
+            return false;
+        }
 
-            foreach ($MemberId as $memberId) {
-                $createdMembers [] = ChatMembersModel::create([
+        $rows = [];
+
+        foreach ($MemberId as $key => $memberIds) {
+            foreach ((array) $memberIds as $memberId) {
+                $rows[] = [
                     'chat_id' => $chatId,
                     'user_id' => $memberId,
-                    'type' => $type
-                ]);
+                    'type'    => $type === 'private'
+                        ? 'PrivateMember'
+                        : ($key === 'user_id' ? 'admin' : 'member'),
+                ];
             }
-
-            foreach ($createdMembers as $createdMember) {
-                $Ids[] = $createdMember['user_id'];
-            }
-
-
-            return $Ids;
         }
-        return null;
+
+        $Ids = [];
+        foreach ($rows as $row) {
+            $Ids[] = ChatMembersModel::create($row)['user_id'];
+        }
+
+        return $Ids;
     }
     private function privateChatExists($memberIds)
     {
         return ChatMembersModel::where('type','PrivateMember')->whereIn('user_id' , $memberIds)->exists();
     }
-    public function GetChatMessages($chatId)
+    public function GetChatMessages($chatId , $userId)
     {
-        return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name','repliedMessageInfo:id,sender_id,message,attachments'])->get();
+        $isChatMember = ChatMembersModel::where('chat_id' , $chatId)->where('user_id' , $userId)->exists();
+        if ($isChatMember) {
+            return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name','repliedMessageInfo:id,sender_id,message,attachments'])->get();
+        }
+        return null;
     }
     public function SendMessage(array $data)
     {

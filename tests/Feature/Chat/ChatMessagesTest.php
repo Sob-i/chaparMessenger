@@ -24,9 +24,11 @@ test('user can send message to a chat', function(){
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -53,9 +55,10 @@ test('user can send message to a chat', function(){
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user1->id ,
         'receiver_id' => $user2->id ,
         'message' => 'first message' ,
         'attachments' => null ,
@@ -80,7 +83,7 @@ test('user can send message to a chat', function(){
 
 });
 
-test('user cant send message using some one else id', function () {
+test('user cant send message using some one else token', function () {
 
     $user1 = User::factory()->create([
         'name' => 'John Doe',
@@ -100,12 +103,15 @@ test('user cant send message using some one else id', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user3);
+    $token3 = $user3->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
-        'user_id' => $user1->id,
-        'type' => 'private',
-    ]);
+    $token1 = $user1->createToken('test-token')->plainTextToken;
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token3)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
+            'type' => 'private',
+        ]);
 
     $response->assertStatus(201)
         ->assertJson([
@@ -130,14 +136,15 @@ test('user cant send message using some one else id', function () {
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
-        'chat_id' => $response->json('data.id'),
-        'sender_id' => $user1->id ,
-        'receiver_id' => $user2->id ,
-        'message' => 'first message' ,
-        'attachments' => null ,
-        'type' => 'message' ,
-    ]);
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token1)
+        ->postJson('api/chat/send-message' , [
+            'chat_id' => $response->json('data.id'),
+            'receiver_id' => $user2->id ,
+            'message' => 'first message' ,
+            'attachments' => null ,
+            'type' => 'message' ,
+        ]);
 
     $responseMessage->assertStatus(201)
         ->assertJson([
@@ -170,9 +177,11 @@ test('user cant send message to a chat with invalid info', function(){
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -199,9 +208,11 @@ test('user cant send message to a chat with invalid info', function(){
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => 1000,
-        'sender_id' => 100 ,
         'receiver_id' => 200 ,
         'message' => 'first message' ,
         'attachments' => null ,
@@ -235,9 +246,11 @@ test('user can send message to a chat with attachment', function(){
         'password' => Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/' . json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/' . json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -247,9 +260,10 @@ test('user can send message to a chat with attachment', function(){
 
     $fileUrl = 'https://example.com/uploads/test-file.jpg';
 
-    $responseMessage = $this->postJson('api/chat/send-message', [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message', [
         'chat_id' => $chatId,
-        'sender_id' => $user1->id,
         'receiver_id' => $user2->id,
         'message' => 'first message',
         'attachments' => $fileUrl,
@@ -275,84 +289,6 @@ test('user can send message to a chat with attachment', function(){
 
 });
 
-test('user cant send message using another user id', function () {
-
-    $user1 = User::factory()->create([
-        'name' => 'John Doe',
-        'email' => 'john@example.com',
-        'password' =>Hash::make('Password1234!'),
-    ]);
-
-    $user2 = User::factory()->create([
-        'name' => 'illyana Rasputin',
-        'email' => 'Magik@queen.com',
-        'password' =>Hash::make('Password12366784!'),
-    ]);
-
-    $user3 = User::factory()->create([
-        'name' => 'moonKnight',
-        'email' => 'mark@mk.com',
-        'password' =>Hash::make('Password12366784!'),
-    ]);
-
-    $this->actingAs($user1);
-
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
-        'type' => 'private',
-    ]);
-
-    $response->assertStatus(201)
-        ->assertJson([
-            'success' => true,
-            'message' => 'chat created successfully',
-            'data' => [
-                'id' => $response->json('data.id'),
-                'type' => 'private',
-                'name' => null,
-            ],
-            'members' => [$user1->id , $user2->id]
-        ]);
-
-    $this->assertDatabaseHas('chats', [
-        'id' => $response->json('data.id'),
-        'type' => 'private',
-    ]);
-
-    $this->assertDatabaseHas('chat_members', [
-        'chat_id' => $response->json('data.id'),
-        'user_id' => $user1->id,
-        'type' => 'PrivateMember',
-    ]);
-
-    $responseMessage = $this->postJson('api/chat/send-message' , [
-        'chat_id' => $response->json('data.id'),
-        'sender_id' => $user3->id ,
-        'receiver_id' => $user2->id ,
-        'message' => 'a message from MOOOOOOOOOOOOOOON' ,
-        'attachments' => null ,
-        'type' => 'message' ,
-    ]);
-
-    $responseMessage->assertStatus(201)
-        ->assertJsonFragment([
-            'chat_id' => $response->json('data.id'),
-            'sender_id' => $user1->id,
-            'receiver_id' => $user2->id,
-            'message' => 'a message from MOOOOOOOOOOOOOOON',
-            'type' => 'message',
-        ]);
-
-    $this->assertDatabaseMissing('chat_messages', [
-        'chat_id' => $response->json('data.id') ,
-        'sender_id' => $user3->id ,
-        'receiver_id' => $user2->id ,
-        'message' => 'a message from MOOOOOOOOOOOOOOON' ,
-        'attachments' => null ,
-        'type' => 'message' ,
-    ]);
-
-});
-
 test('user can get chat messages', function () {
 
     $user1 = User::factory()->create([
@@ -367,9 +303,14 @@ test('user can get chat messages', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
+    $token2 = $user2->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $this->actingAs($user1, 'sanctum');
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -396,22 +337,22 @@ test('user can get chat messages', function () {
         'type' => 'PrivateMember',
     ]);
 
-    $this->actingAs($user1);
-
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user1->id ,
         'receiver_id' => $user2->id ,
         'message' => 'first message' ,
         'attachments' => null ,
         'type' => 'message' ,
     ]);
 
-    $this->actingAs($user2);
+    $this->actingAs($user2, 'sanctum');
 
-    $responseMessage2 = $this->postJson('api/chat/send-message' , [
+    $responseMessage2 = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user2->id ,
         'receiver_id' => $user1->id ,
         'message' => 'second message' ,
         'attachments' => null ,
@@ -438,6 +379,7 @@ test('user can get chat messages', function () {
 
     $id = $response->json('data.id');
 
+    $this->actingAs($user1, 'sanctum');
 
     $responseGetMessage = $this->getJson("api/chat/$id");
 
@@ -499,6 +441,110 @@ test('user can get chat messages', function () {
     ]);
 });
 
+test('user cant get another user chat messages', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $user3 = User::factory()->create([
+        'name' => 'John Doe fake',
+        'email' => 'johnfake@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $token = $user1->createToken('test-token')->plainTextToken;
+    $token2 = $user2->createToken('test-token')->plainTextToken;
+
+    $this->actingAs($user1, 'sanctum');
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
+            'type' => 'private',
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user1->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'PrivateMember',
+    ]);
+
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message' , [
+            'chat_id' => $response->json('data.id'),
+            'receiver_id' => $user2->id ,
+            'message' => 'first message' ,
+            'attachments' => null ,
+            'type' => 'message' ,
+        ]);
+
+    $this->actingAs($user2, 'sanctum');
+
+    $responseMessage2 = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/send-message' , [
+            'chat_id' => $response->json('data.id'),
+            'receiver_id' => $user1->id ,
+            'message' => 'second message' ,
+            'attachments' => null ,
+            'type' => 'reply' ,
+            'reply_to_message' => $responseMessage->json('data.id') ,
+            'reply_to_user' => $user1->id,
+        ]);
+
+    $responseMessage->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'message sent successfully',
+            'data' => $responseMessage->json('data')
+        ]);
+
+    $this->assertDatabaseHas('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user1->id ,
+        'receiver_id' => $user2->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+
+    $id = $response->json('data.id');
+
+    $this->actingAs($user3, 'sanctum');
+
+    $responseGetMessage = $this->getJson("api/chat/$id");
+
+    $responseGetMessage->assertStatus(401);
+
+});
+
 test('user can edit its message', function () {
 
     $user1 = User::factory()->create([
@@ -513,9 +559,11 @@ test('user can edit its message', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -542,9 +590,10 @@ test('user can edit its message', function () {
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user1->id ,
         'receiver_id' => $user2->id ,
         'message' => 'first message' ,
         'attachments' => null ,
@@ -567,7 +616,9 @@ test('user can edit its message', function () {
         'type' => 'message' ,
     ]);
 
-    $responseEditMessage = $this->putJson('api/chat/edit-message',[
+    $responseEditMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson('api/chat/edit-message',[
         'id' => $responseMessage->json('data.id'),
         'chat_id' => $response->json('data.id'),
         'message' => 'first message edited' ,
@@ -606,9 +657,11 @@ test('user cant edit someone else message', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user2);
+    $token2 = $user2->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user2->id,'member' =>$user1->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/create/'. json_encode($user1->id), [
         'type' => 'private',
     ]);
 
@@ -635,9 +688,10 @@ test('user cant edit someone else message', function () {
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user2->id ,
         'receiver_id' => $user1->id ,
         'message' => 'user2 message to user1' ,
         'attachments' => null ,
@@ -660,9 +714,12 @@ test('user cant edit someone else message', function () {
         'type' => 'message' ,
     ]);
 
-    $this->actingAs($user1);
+    $token1 = $user1->createToken('test-token')->plainTextToken;
+    $this->actingAs($user1,'sanctum');
 
-    $responseEditMessage = $this->putJson('api/chat/edit-message',[
+    $responseEditMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token1)
+        ->putJson('api/chat/edit-message',[
         'id' => $responseMessage->json('data.id'),
         'chat_id' => $response->json('data.id'),
         'message' => 'trying to edit message user 2' ,
@@ -691,9 +748,11 @@ test('user can delete its message', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -720,9 +779,10 @@ test('user can delete its message', function () {
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user1->id ,
         'receiver_id' => $user2->id ,
         'message' => 'first message' ,
         'attachments' => null ,
@@ -779,9 +839,11 @@ test('user cant delete someone else message', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user2);
+    $token2 = $user2->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user2->id,'member' =>$user1->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/create/'. json_encode($user1->id), [
         'type' => 'private',
     ]);
 
@@ -808,9 +870,10 @@ test('user cant delete someone else message', function () {
         'type' => 'PrivateMember',
     ]);
 
-    $responseMessage = $this->postJson('api/chat/send-message' , [
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/send-message' , [
         'chat_id' => $response->json('data.id'),
-        'sender_id' => $user2->id ,
         'receiver_id' => $user1->id ,
         'message' => 'user2 message' ,
         'attachments' => null ,
@@ -833,10 +896,12 @@ test('user cant delete someone else message', function () {
         'type' => 'message' ,
     ]);
 
-    $this->actingAs($user1);
+    $token1 = $user1->createToken('test-token')->plainTextToken;
+    $this->actingAs($user1,'sanctum');
 
-    $responseDeleteMessage = $this->deleteJson('api/chat/delete-message',[
-        'user_id' => $user1->id,
+    $responseDeleteMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token1)
+        ->deleteJson('api/chat/delete-message',[
         'id' => $responseMessage->json('data.id'),
         'chat_id' => $response->json('data.id'),
     ]);

@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\DeleteMessageRequest;
 use App\Http\Requests\Api\V1\EditMessageRequest;
 use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Services\Api\V1\chat\ChatServices;
+use Illuminate\Http\Request;
 
 class ChatsController extends Controller
 {
@@ -26,9 +27,7 @@ class ChatsController extends Controller
             ], 422);
         }
 
-        $Ids = json_decode($memberId,true);
-
-        $Ids['user_id'] = auth()->id();
+        $Ids = ['user_id' =>$request->user()->id ,'members' => json_decode($memberId,true)];
 
         $createdChat = $this->chatServices->CreateChat($data,$Ids);
 
@@ -40,11 +39,11 @@ class ChatsController extends Controller
         }
 
         if ($createdChat) {
-            $type = 'admin';
-            if ($createdChat->type == 'channel') {
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,$type);
+            $type = 'private';
+            if ($createdChat->type == 'channel'|| $createdChat->type == 'group') {
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,'nonePrivate');
             }else{
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,$data['type'] == 'private' ? 'PrivateMember' : $type);
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,$type);
             }
 
             return response()->json([
@@ -80,9 +79,11 @@ class ChatsController extends Controller
             'message' => 'could not find any chats',
         ]);
     }
-    public function getChatMessages($chatId)
+    public function getChatMessages($chatId , Request $request)
     {
-        $messages = $this->chatServices->GetChatMessages($chatId);
+        $user = $request->user()->id;
+
+        $messages = $this->chatServices->GetChatMessages($chatId , $user);
 
         if ($messages) {
             return response()->json([
@@ -99,7 +100,7 @@ class ChatsController extends Controller
     {
         $data = $request->validated();
 
-        $data['sender_id'] = auth()->id();
+        $data['sender_id'] = $request->user()->id;
 
         $sentMessage = $this->chatServices->SendMessage($data);
 
@@ -120,6 +121,8 @@ class ChatsController extends Controller
     {
         $data = $request->validated();
 
+        $data['sender_id'] = $request->user()->id;
+
         $updatedMessage = $this->chatServices->EditMessage($data);
 
         if ($updatedMessage) {
@@ -136,6 +139,8 @@ class ChatsController extends Controller
     public function deleteMessage(DeleteMessageRequest $request)
     {
         $data = $request->validated();
+
+        $data['user_id'] = $request->user()->id;
 
         $deletedMessage = $this->chatServices->DeleteMessage($data);
 

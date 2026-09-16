@@ -23,7 +23,6 @@ class DeleteMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|integer|exists:users,id',
             'id' => 'required|integer|exists:chat_messages,id',
             'chat_id' => 'required|integer|exists:chats,id',
         ];

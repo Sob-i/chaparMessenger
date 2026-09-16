@@ -23,9 +23,11 @@ test('user can create private chat without a name', function(){
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
         'type' => 'private',
     ]);
 
@@ -67,18 +69,22 @@ test('user cant create same private chat twice', function () {
         'password' =>Hash::make('Password12366784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $first = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
-        'type' => 'private',
-    ]);
+    $first = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
+            'type' => 'private',
+        ]);
 
     $first->assertStatus(201);
     $firstChatId = $first->json('data.id');
 
-    $second = $this->postJson('api/chat/create/'. json_encode(['user_id' => $user1->id,'member' =>$user2->id]), [
-        'type' => 'private',
-    ]);
+    $second = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
+            'type' => 'private',
+        ]);
 
     $second->assertStatus(409)
     ->assertJson([
@@ -111,12 +117,14 @@ test('user can create group chat with a name', function(){
         'password' =>Hash::make('Password1236adawd6784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id , $user3->id]), [
-        'type' => 'group',
-        'name' => 'group chat 1',
-    ]);
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
+            'type' => 'group',
+            'name' => 'group chat 1',
+        ]);
 
     $response->assertStatus(201)
     ->assertJson([
@@ -144,9 +152,11 @@ test('user can create channel with a name', function(){
         'password' =>Hash::make('Password1234!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([]), [
         'type' => 'channel',
         'name' => 'mmd',
     ]);
@@ -195,9 +205,11 @@ test('user cant create a group chat or channel without a name', function () {
         'password' =>Hash::make('Password1236adawd6784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/'. json_encode([$user1->id , $user2->id , $user3->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
         'type' => 'group',
     ]);
 
@@ -233,11 +245,13 @@ test('user can get its chats', function () {
         'password' => Hash::make('Password1236adawd6784!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->postJson('api/chat/create/' . json_encode([$user1->id, $user2->id, $user3->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/' . json_encode([$user2->id, $user3->id]), [
         'type' => 'group',
-        'name' => 'dek to archang',
+        'name' => 'test group',
     ]);
 
     $response->assertStatus(201)
@@ -252,7 +266,7 @@ test('user can get its chats', function () {
         'data' => [
             'id' => $chatId,
             'type' => 'group',
-            'name' => 'dek to archang',
+            'name' => 'test group',
         ],
         'members' => [$user1->id, $user2->id, $user3->id]
     ]);
@@ -267,7 +281,9 @@ test('user can get its chats', function () {
         'user_id' => $user1->id,
     ]);
 
-    $response = $this->postJson('api/chat/create/' . json_encode([$user1->id, $user2->id]), [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/' . json_encode($user2->id), [
         'type' => 'private',
     ]);
 

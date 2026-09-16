@@ -24,7 +24,6 @@ class SendMessageRequest extends FormRequest
     {
         return [
             'chat_id' => 'required|integer|exists:chats,id',
-            'sender_id' => 'required|integer|exists:users,id',
             'receiver_id' => 'required|integer|exists:users,id',
             'message' => 'nullable|string|min:1',
             'attachments' => 'nullable|url',

@@ -30,7 +30,6 @@ class UserProfileController extends Controller
             'message' => 'User not found',
         ],406);
     }
-
     public function editProfile(EditUserProfileRequest $request)
     {
         $data = $request->validated();

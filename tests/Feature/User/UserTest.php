@@ -76,3 +76,44 @@ test('user can edit its profile settings', function(){
 
 });
 
+test('user cant edit another user profile settings', function(){
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'mmd scott',
+        'email' => 'mmd@scott.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $this->actingAs($user1);
+
+    $data = [
+        'user_name' => 'johnny',
+        'avatar' => fake()->imageUrl(),
+        'bio' => 'lone wolf aooooooooooooooooooooooooooo',
+        'phone' => '09377805100',
+    ];
+
+    $response = $this->putJson('api/user_profile/edit', [
+        'user_id' => $user2->id ,
+        'user_name' => $data['user_name'],
+        'avatar' => $data['avatar'],
+        'bio' => $data['bio'],
+        'phone' => $data['phone'],
+    ]);
+
+    $this->assertDatabaseMissing('user_profile', [
+        'user_id' => $user2->id,
+        'user_name' => '@'.$data['user_name'],
+        'avatar' => $data['avatar'],
+        'bio' => $data['bio'],
+        'phone' => $data['phone'],
+    ]);
+
+});
+
