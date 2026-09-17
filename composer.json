@@ -11,8 +11,10 @@
     "require": {
         "php": "^8.4.15",
         "laravel/framework": "^13.17",
+        "laravel/reverb": "*",
         "laravel/sanctum": "*",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "pusher/pusher-php-server": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
