@@ -2,6 +2,9 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Broadcast;
+use App\Events\MessageSent;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 uses(RefreshDatabase::class);
@@ -913,5 +916,43 @@ test('user cant delete someone else message', function () {
         'chat_id' => $response->json('data.id') ,
         'message' => 'user2 message' ,
     ]);
+
+});
+
+test('broadcasts message sent event when user sends a message', function () {
+    
+    Event::fake([MessageSent::class]);
+
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    $token = $user1->createToken('test-token')->plainTextToken;
+
+    $chatResponse = $this
+        ->withToken($token)
+        ->postJson("/api/chat/create/{$user2->id}", [
+            'type' => 'private',
+        ]);
+
+    $chatResponse->assertStatus(201);
+
+    $chatId = $chatResponse->json('data.id');
+
+    $response = $this
+        ->withToken($token)
+        ->postJson('/api/chat/send-message', [
+            'chat_id' => $chatId,
+            'receiver_id' => $user2->id,
+            'message' => 'Hello Reverb!',
+            'attachments' => null,
+            'type' => 'message',
+        ]);
+
+    $response->assertStatus(201);
+
+    Event::assertDispatched(MessageSent::class, function ($event) use ($chatId) {
+        return $event->message->chat_id == $chatId
+            && $event->message->message === 'Hello Reverb!';
+    });
 
 });
