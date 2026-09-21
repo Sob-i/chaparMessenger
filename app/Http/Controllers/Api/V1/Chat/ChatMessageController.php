@@ -42,6 +42,7 @@ class ChatMessageController extends Controller
         $sentMessage = $this->chatServices->SendMessage($data);
 
         if ($sentMessage) {
+            $sentMessage->load(['senderInfo:id,name','senderInfo:id,name']);
             broadcast(new MessageSent($sentMessage));
             return response()->json([
                 'success' => true,
