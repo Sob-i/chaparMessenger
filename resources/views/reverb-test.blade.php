@@ -11,7 +11,7 @@
 <div id="messages"></div>
 
 <script>
-    localStorage.setItem('auth_token', 'YourAuthtoken');
+    localStorage.setItem('auth_token', 'your auth token');
     localStorage.getItem('auth_token');
 </script>
 </body>

@@ -7,5 +7,6 @@ Route::get('/', function () {
 });
 
 Route::view('/reverb-test', 'reverb-test');
+Route::view('/chats', 'chats');
 
 require __DIR__.'/api.php';

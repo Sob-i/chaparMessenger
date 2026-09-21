@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Chat;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\CreateChatRequest;
 use App\Services\Api\V1\chat\ChatServices;
+use Illuminate\Http\Request;
 
 class ChatsController extends Controller
 {
@@ -58,9 +59,9 @@ class ChatsController extends Controller
             'message' => 'could not create chat',
         ],500);
     }
-    public function getChats()
+    public function getChats(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         $chats = $this->chatServices->Chats($user->id);
 

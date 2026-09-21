@@ -23,7 +23,7 @@ window.Echo = new Echo({
     },
 });
 
-const channel = window.Echo.private('chat.2');
+const channel = window.Echo.private(`chat.${chat.id}`)
 
 channel.listen('.message.sent', (event) => {
     const message = event.message;
