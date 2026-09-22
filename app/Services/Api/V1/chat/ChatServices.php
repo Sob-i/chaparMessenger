@@ -25,7 +25,7 @@ class ChatServices
         foreach ($chatsId as $chatId) {
             $chats [] = ChatModel::where('id' , $chatId)->get();
         }
-        return $chats;
+        return collect($chats)->flatten();
     }
     private function GetChats($userId)
     {
