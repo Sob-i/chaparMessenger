@@ -18,9 +18,11 @@ test('user can get its profile', function () {
         'password' =>Hash::make('Password1234!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
-    $response = $this->getJson('api/user_profile');
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->getJson('api/user-profile');
 
     $response->assertStatus(200)->
     assertJson([
@@ -44,7 +46,7 @@ test('user can edit its profile settings', function(){
         'password' =>Hash::make('Password1234!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
     $data = [
         'user_name' => 'johnny',
@@ -52,7 +54,9 @@ test('user can edit its profile settings', function(){
         'bio' => 'lone wolf aooooooooooooooooooooooooooo',
         'phone' => '09377805100',
     ];
-    $response = $this->putJson('api/user_profile/edit', [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson('api/user-profile/edit', [
         'user_id' => $user1->id ,
         'user_name' => $data['user_name'],
         'avatar' => $data['avatar'],
@@ -90,7 +94,7 @@ test('user cant edit another user profile settings', function(){
         'password' =>Hash::make('Password1234!'),
     ]);
 
-    $this->actingAs($user1);
+    $token = $user1->createToken('test-token')->plainTextToken;
 
     $data = [
         'user_name' => 'johnny',
@@ -99,7 +103,9 @@ test('user cant edit another user profile settings', function(){
         'phone' => '09377805100',
     ];
 
-    $response = $this->putJson('api/user_profile/edit', [
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson('api/user-profile/edit', [
         'user_id' => $user2->id ,
         'user_name' => $data['user_name'],
         'avatar' => $data['avatar'],

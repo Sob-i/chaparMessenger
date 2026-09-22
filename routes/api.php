@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Chat\ChatsController;
 use App\Http\Controllers\Api\V1\Chat\ChatMessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\User\UserProfileController;
+use App\Http\Controllers\Api\V1\User\UserSettingController;
 
     // register
     Route::post('api/register', [AuthController::class, 'register']);
@@ -28,6 +29,11 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::delete('api/chat/delete-message', [ChatMessageController::class, 'deleteMessage']);
 
     // user profile
-    Route::get('api/user_profile', [UserProfileController::class, 'getProfile']);
-    Route::put('api/user_profile/edit', [UserProfileController::class, 'editProfile']);
+    Route::get('api/user-profile', [UserProfileController::class, 'getProfile']);
+    Route::put('api/user-profile/edit', [UserProfileController::class, 'editProfile']);
+
+    // user setting
+    Route::get('api/user-setting/blocked-users', [UserSettingController::class, 'getBlockedUsers']);
+    Route::post('api/user-setting/block-users', [UserSettingController::class, 'blockUser']);
+    Route::delete('api/user-setting/unblock-users', [UserSettingController::class, 'unblockUser']);
 });
