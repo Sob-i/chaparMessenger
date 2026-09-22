@@ -25,7 +25,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('chat_messages', function (Blueprint $table) {
-            $table->dropColumn('reply_to_message', 'reply_to_user');
+
+            $table->dropForeign(['reply_to_message']);
+            $table->dropForeign(['reply_to_user']);
+
+            $table->dropColumn(['reply_to_message', 'reply_to_user']);
         });
     }
 };

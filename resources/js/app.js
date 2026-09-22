@@ -8,3 +8,4 @@
 
 import './chat.js'
 import './echo';
+import './chat.js'

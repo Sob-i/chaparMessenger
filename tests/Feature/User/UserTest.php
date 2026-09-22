@@ -20,7 +20,7 @@ test('user can get its profile', function () {
 
     $this->actingAs($user1);
 
-    $response = $this->getJson('api/user_profile');
+    $response = $this->getJson('api/user-profile');
 
     $response->assertStatus(200)->
     assertJson([
@@ -52,7 +52,7 @@ test('user can edit its profile settings', function(){
         'bio' => 'lone wolf aooooooooooooooooooooooooooo',
         'phone' => '09377805100',
     ];
-    $response = $this->putJson('api/user_profile/edit', [
+    $response = $this->putJson('api/user-profile/edit', [
         'user_id' => $user1->id ,
         'user_name' => $data['user_name'],
         'avatar' => $data['avatar'],
@@ -66,7 +66,7 @@ test('user can edit its profile settings', function(){
         'message' => 'Profile edited successfully',
     ]);
 
-    $this->assertDatabaseHas('user_profile', [
+    $this->assertDatabaseHas('user-profile', [
         'user_id' => $user1->id,
         'user_name' => '@'.$data['user_name'],
         'avatar' => $data['avatar'],
@@ -99,7 +99,7 @@ test('user cant edit another user profile settings', function(){
         'phone' => '09377805100',
     ];
 
-    $response = $this->putJson('api/user_profile/edit', [
+    $response = $this->putJson('api/user-profile/edit', [
         'user_id' => $user2->id ,
         'user_name' => $data['user_name'],
         'avatar' => $data['avatar'],
@@ -107,7 +107,7 @@ test('user cant edit another user profile settings', function(){
         'phone' => $data['phone'],
     ]);
 
-    $this->assertDatabaseMissing('user_profile', [
+    $this->assertDatabaseMissing('user-profile', [
         'user_id' => $user2->id,
         'user_name' => '@'.$data['user_name'],
         'avatar' => $data['avatar'],
