@@ -23,7 +23,6 @@ class UserSettingController extends Controller
             'blockedUsers' => $blockedUsers
         ]);
     }
-
     public function blockUser(BlockUserRequest $request)
     {
         $data = [

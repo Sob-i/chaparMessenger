@@ -29,7 +29,7 @@ test('user can block another user with valid info', function () {
     $response = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
         ->postJson('api/user-setting/block-users',[
-            'blocked_id' => $user2->id
+            'blocked_id' => [$user2->id]
         ]);
 
     $response->assertStatus(201)->
