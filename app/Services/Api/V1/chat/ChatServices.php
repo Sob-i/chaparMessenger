@@ -4,6 +4,7 @@ namespace App\Services\Api\V1\chat;
 
 use App\Http\Requests\Api\V1\DeleteMessageRequest;
 use App\Http\Requests\Api\V1\SendMessageRequest;
+use App\Models\BlockedUsersModel;
 use App\Models\ChatMembersModel;
 use App\Models\ChatMessagesModel;
 use App\Models\ChatModel;
@@ -84,6 +85,10 @@ class ChatServices
             return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name','repliedMessageInfo:id,sender_id,message,attachments'])->get();
         }
         return null;
+    }
+    public function IsBlocked($senderId, $receiverId)
+    {
+        return BlockedUsersModel::where('user_id' , $receiverId)->where('blocked_id' , $senderId)->exists();
     }
     public function SendMessage(array $data)
     {
