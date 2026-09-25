@@ -80,12 +80,12 @@ class ChatsController extends Controller
     {
         $data = [
             'type' => 'chat' ,
-            'searchKey' => $request->input('searchKey') ,
+            'searchKey' => $request->headers->get('searchKey') ,
             ];
 
         $result = $this->chatServices->Search($data);
 
-        if ($result) {
+        if ($result->IsNotEmpty()) {
             return response()->json([
                 'success' => true,
                 'chats' => $result

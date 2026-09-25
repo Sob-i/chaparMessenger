@@ -28,7 +28,7 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::post('api/chat/send-message', [ChatMessageController::class, 'sendMessage']);
     Route::put('api/chat/edit-message', [ChatMessageController::class, 'editMessage']);
     Route::delete('api/chat/delete-message', [ChatMessageController::class, 'deleteMessage']);
-    Route::get('api/chat/{id}/search', [ChatsController::class, 'searchChatMessages']);
+    Route::get('api/chat/{id}/search', [ChatMessageController::class, 'searchChatMessages']);
 
     // user profile
     Route::get('api/user-profile', [UserProfileController::class, 'getProfile']);

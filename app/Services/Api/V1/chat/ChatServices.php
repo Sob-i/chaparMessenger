@@ -2,13 +2,10 @@
 
 namespace App\Services\Api\V1\chat;
 
-use App\Http\Requests\Api\V1\DeleteMessageRequest;
-use App\Http\Requests\Api\V1\SendMessageRequest;
 use App\Models\BlockedUsersModel;
 use App\Models\ChatMembersModel;
 use App\Models\ChatMessagesModel;
 use App\Models\ChatModel;
-use Illuminate\Http\Request;
 
 class ChatServices
 {
@@ -76,7 +73,17 @@ class ChatServices
     }
     private function privateChatExists($memberIds)
     {
-        return ChatMembersModel::where('type','PrivateMember')->whereIn('user_id' , $memberIds)->exists();
+        $userIds = [
+            $memberIds['user_id'],
+            $memberIds['members'],
+        ];
+
+        return ChatMembersModel::where('type', 'PrivateMember')
+            ->whereIn('user_id', $userIds)
+            ->select('chat_id')
+            ->groupBy('chat_id')
+            ->havingRaw('COUNT(DISTINCT user_id) = ?', [count($userIds)])
+            ->exists();
     }
     public function GetChatMessages($chatId , $userId)
     {
@@ -139,13 +146,20 @@ class ChatServices
 
         return $message->delete();
     }
+    public function IsMember($data)
+    {
+        return ChatMembersModel::where('chat_id' , $data['chatId'])->where('user_id' , $data['userId'])->exists();
+    }
     public function Search(array $data)
     {
-        if ($data['type'] == 'chats') {
-            return ChatModel::where('name' , $data['searchKey'])->get();
+        if ($data['type'] == 'chat') {
+
+            return ChatModel::whereIn('type' , ['PublicChannel' , 'PublicGroup'])->where('name' , 'LIKE'  , '%' . $data['searchKey'] . '%')->get();
 
         }elseif ($data['type'] == 'message') {
-            return ChatMessagesModel::where('message' , $data['searchKey'])->get();
+
+            return ChatMessagesModel::where('chat_id' , $data['chatId'])->where('message' , 'LIKE'  , '%' . $data['searchKey'] . '%')->get();
+
         }
         return false;
     }

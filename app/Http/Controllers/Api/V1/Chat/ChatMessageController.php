@@ -99,4 +99,33 @@ class ChatMessageController extends Controller
             'message' => 'could not delete message',
         ],406);
     }
+    public function searchChatMessages(Request $request)
+    {
+        $data = [
+            'type' => 'message' ,
+            'chatId' => $request->id ,
+            'searchKey' => $request->headers->get('searchKey') ,
+            'userId' => $request->user()->id,
+        ];
+
+        if ($this->chatServices->IsMember($data))
+        {
+            $result = $this->chatServices->Search($data);
+
+            if ($result->IsNotEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'messages' => $result
+                ],200);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'could not find any message',
+            ],204);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'unauthorized',
+        ],401);
+    }
 }
