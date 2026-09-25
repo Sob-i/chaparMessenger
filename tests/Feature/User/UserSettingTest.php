@@ -195,3 +195,71 @@ test('user can unblock blocked users', function () {
         'blocked_id' => $user3->id
     ]);
 });
+
+test('blocked user cant messages the user who is blocked by', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $token = $user1->createToken('test-token')->plainTextToken;
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/user-setting/block-users',[
+            'blocked_id' => [$user2->id]
+        ]);
+
+    $response->assertStatus(201)->
+    assertJson([
+        'success' => true,
+        'message' => 'User blocked',
+    ]);
+
+    $this->assertDatabaseHas('blocked_users', [
+        'user_id' => $user1->id,
+        'blocked_id' => $user2->id
+    ]);
+
+    $token2 = $user2->createToken('test-token')->plainTextToken;
+    $this->actingAs($user2);
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/create/'. json_encode($user1->id), [
+            'type' => 'private',
+        ]);
+
+    $responseMessage = $this
+        ->withHeader('Authorization', 'Bearer ' . $token2)
+        ->postJson('api/chat/send-message' , [
+            'chat_id' => $response->json('data.id'),
+            'receiver_id' => $user1->id ,
+            'message' => 'first message' ,
+            'attachments' => null ,
+            'type' => 'message' ,
+        ]);
+
+    $responseMessage->assertStatus(403)
+        ->assertJson([
+            'success' => false,
+            'message' => 'you cant send message to this person',
+        ]);
+
+    $this->assertDatabaseMissing('chat_messages', [
+        'chat_id' => $response->json('data.id') ,
+        'sender_id' => $user2->id ,
+        'receiver_id' => $user1->id ,
+        'message' => 'first message' ,
+        'attachments' => null ,
+        'type' => 'message' ,
+    ]);
+});

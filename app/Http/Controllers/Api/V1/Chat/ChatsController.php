@@ -17,7 +17,7 @@ class ChatsController extends Controller
     {
         $data = $request->validated();
 
-        if (($data['type'] == 'group' || $data['type'] == 'channel') && empty($data['name'])) {
+        if (($data['type'] == 'PublicGroup' || $data['type'] == 'PrivateGroup' || $data['type'] == 'PublicChannel' || $data['type'] == 'PrivateChannel') && empty($data['name'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please enter a name for group or channel',
@@ -37,10 +37,10 @@ class ChatsController extends Controller
 
         if ($createdChat) {
             $type = 'private';
-            if ($createdChat->type == 'channel'|| $createdChat->type == 'group') {
-                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,'nonePrivate');
-            }else{
+            if ($createdChat->type == 'private') {
                 $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,$type);
+            }else{
+                $members = $this->chatServices->CreateChatMembers($createdChat->id,$Ids,'nonePrivate');
             }
 
             return response()->json([
@@ -75,5 +75,25 @@ class ChatsController extends Controller
             'success' => false,
             'message' => 'could not find any chats',
         ]);
+    }
+    public function searchChats(Request $request)
+    {
+        $data = [
+            'type' => 'chat' ,
+            'searchKey' => $request->headers->get('searchKey') ,
+            ];
+
+        $result = $this->chatServices->Search($data);
+
+        if ($result->IsNotEmpty()) {
+            return response()->json([
+                'success' => true,
+                'chats' => $result
+            ],200);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'could not find any chats',
+        ],204);
     }
 }

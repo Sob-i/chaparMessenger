@@ -21,12 +21,14 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     // chats
     Route::get('api/chats', [ChatsController::class, 'getChats']);
     Route::post('api/chat/create/{membersId}', [ChatsController::class, 'createChat']);
+    Route::get('api/chats/search', [ChatsController::class, 'searchChats']);
 
     // chat messages
     Route::get('api/chat/{id}', [ChatMessageController::class, 'getChatMessages']);
     Route::post('api/chat/send-message', [ChatMessageController::class, 'sendMessage']);
     Route::put('api/chat/edit-message', [ChatMessageController::class, 'editMessage']);
     Route::delete('api/chat/delete-message', [ChatMessageController::class, 'deleteMessage']);
+    Route::get('api/chat/{id}/search', [ChatMessageController::class, 'searchChatMessages']);
 
     // user profile
     Route::get('api/user-profile', [UserProfileController::class, 'getProfile']);

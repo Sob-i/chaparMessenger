@@ -2,12 +2,10 @@
 
 namespace App\Services\Api\V1\chat;
 
-use App\Http\Requests\Api\V1\DeleteMessageRequest;
-use App\Http\Requests\Api\V1\SendMessageRequest;
+use App\Models\BlockedUsersModel;
 use App\Models\ChatMembersModel;
 use App\Models\ChatMessagesModel;
 use App\Models\ChatModel;
-use Illuminate\Http\Request;
 
 class ChatServices
 {
@@ -75,7 +73,17 @@ class ChatServices
     }
     private function privateChatExists($memberIds)
     {
-        return ChatMembersModel::where('type','PrivateMember')->whereIn('user_id' , $memberIds)->exists();
+        $userIds = [
+            $memberIds['user_id'],
+            $memberIds['members'],
+        ];
+
+        return ChatMembersModel::where('type', 'PrivateMember')
+            ->whereIn('user_id', $userIds)
+            ->select('chat_id')
+            ->groupBy('chat_id')
+            ->havingRaw('COUNT(DISTINCT user_id) = ?', [count($userIds)])
+            ->exists();
     }
     public function GetChatMessages($chatId , $userId)
     {
@@ -84,6 +92,10 @@ class ChatServices
             return ChatMessagesModel::where('chat_id' , $chatId)->orderBy('created_at' , 'DESC')->with(['senderInfo:id,name','receiverInfo:id,name','repliedMessageInfo:id,sender_id,message,attachments'])->get();
         }
         return null;
+    }
+    public function IsBlocked($senderId, $receiverId)
+    {
+        return BlockedUsersModel::where('user_id' , $receiverId)->where('blocked_id' , $senderId)->exists();
     }
     public function SendMessage(array $data)
     {
@@ -133,5 +145,22 @@ class ChatServices
         $message = ChatMessagesModel::where('id',$data['id'])->where('chat_id',$data['chat_id'])->where('sender_id' , auth()->id())->firstOrFail();
 
         return $message->delete();
+    }
+    public function IsMember($data)
+    {
+        return ChatMembersModel::where('chat_id' , $data['chatId'])->where('user_id' , $data['userId'])->exists();
+    }
+    public function Search(array $data)
+    {
+        if ($data['type'] == 'chat') {
+
+            return ChatModel::whereIn('type' , ['PublicChannel' , 'PublicGroup'])->where('name' , 'LIKE'  , '%' . $data['searchKey'] . '%')->get();
+
+        }elseif ($data['type'] == 'message') {
+
+            return ChatMessagesModel::where('chat_id' , $data['chatId'])->where('message' , 'LIKE'  , '%' . $data['searchKey'] . '%')->get();
+
+        }
+        return false;
     }
 }

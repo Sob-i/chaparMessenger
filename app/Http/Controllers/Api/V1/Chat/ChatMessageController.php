@@ -39,22 +39,27 @@ class ChatMessageController extends Controller
 
         $data['sender_id'] = $request->user()->id;
 
-        $sentMessage = $this->chatServices->SendMessage($data);
+        if (!$this->chatServices->IsBlocked($data['sender_id'], $data['receiver_id'])) {
+            $sentMessage = $this->chatServices->SendMessage($data);
+            if ($sentMessage) {
+                $sentMessage->load(['senderInfo:id,name','senderInfo:id,name']);
+                broadcast(new MessageSent($sentMessage));
+                return response()->json([
+                    'success' => true,
+                    'message' => 'message sent successfully',
+                    'data' => $sentMessage,
+                ],201);
 
-        if ($sentMessage) {
-            $sentMessage->load(['senderInfo:id,name','senderInfo:id,name']);
-            broadcast(new MessageSent($sentMessage));
+            }
             return response()->json([
-                'success' => true,
-                'message' => 'message sent successfully',
-                'data' => $sentMessage,
-            ],201);
+                'success' => false,
+                'message' => 'could not create message',
+            ],401);
         }
-
         return response()->json([
             'success' => false,
-            'message' => 'could not create message',
-        ],401);
+            'message' => 'you cant send message to this person',
+        ],403);
     }
     public function editMessage(EditMessageRequest $request)
     {
@@ -93,5 +98,34 @@ class ChatMessageController extends Controller
             'success' => false,
             'message' => 'could not delete message',
         ],406);
+    }
+    public function searchChatMessages(Request $request)
+    {
+        $data = [
+            'type' => 'message' ,
+            'chatId' => $request->id ,
+            'searchKey' => $request->headers->get('searchKey') ,
+            'userId' => $request->user()->id,
+        ];
+
+        if ($this->chatServices->IsMember($data))
+        {
+            $result = $this->chatServices->Search($data);
+
+            if ($result->IsNotEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'messages' => $result
+                ],200);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'could not find any message',
+            ],204);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'unauthorized',
+        ],401);
     }
 }
