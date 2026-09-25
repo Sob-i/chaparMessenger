@@ -139,4 +139,14 @@ class ChatServices
 
         return $message->delete();
     }
+    public function Search(array $data)
+    {
+        if ($data['type'] == 'chats') {
+            return ChatModel::where('name' , $data['searchKey'])->get();
+
+        }elseif ($data['type'] == 'message') {
+            return ChatMessagesModel::where('message' , $data['searchKey'])->get();
+        }
+        return false;
+    }
 }

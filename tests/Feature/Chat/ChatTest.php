@@ -97,7 +97,7 @@ test('user cant create same private chat twice', function () {
     $this->assertDatabaseCount('chat_members', 2);
 });
 
-test('user can create group chat with a name', function(){
+test('user can create public group chat with a name', function(){
 
     $user1 = User::factory()->create([
         'name' => 'John Doe',
@@ -122,7 +122,7 @@ test('user can create group chat with a name', function(){
     $response = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
         ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
-            'type' => 'group',
+            'type' => 'PublicGroup',
             'name' => 'group chat 1',
         ]);
 
@@ -132,7 +132,7 @@ test('user can create group chat with a name', function(){
         'message' => 'chat created successfully',
         'data' => [
             'id' => $response->json('data.id'),
-            'type' => 'group',
+            'type' => 'PublicGroup',
             'name' => 'group chat 1',
         ],
         'members' => [$user1->id , $user2->id , $user3->id]
@@ -140,11 +140,11 @@ test('user can create group chat with a name', function(){
 
     $this->assertDatabaseHas('chats', [
         'id' => $response->json('data.id'),
-        'type' => 'group',
+        'type' => 'PublicGroup',
     ]);
 });
 
-test('user can create channel with a name', function(){
+test('user can create public channel with a name', function(){
 
     $user1 = User::factory()->create([
         'name' => 'John Doe',
@@ -157,7 +157,7 @@ test('user can create channel with a name', function(){
     $response = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
         ->postJson('api/chat/create/'. json_encode([]), [
-        'type' => 'channel',
+        'type' => 'PublicChannel',
         'name' => 'mmd',
     ]);
 
@@ -167,7 +167,7 @@ test('user can create channel with a name', function(){
             'message' => 'chat created successfully',
             'data' => [
                 'id' => $response->json('data.id'),
-                'type' => 'channel',
+                'type' => 'PublicChannel',
                 'name' => 'mmd',
             ],
             'members' => [$user1->id]
@@ -175,7 +175,7 @@ test('user can create channel with a name', function(){
 
     $this->assertDatabaseHas('chats', [
         'id' => $response->json('data.id'),
-        'type' => 'channel',
+        'type' => 'PublicChannel',
     ]);
 
     $this->assertDatabaseHas('chat_members', [
@@ -210,7 +210,7 @@ test('user cant create a group chat or channel without a name', function () {
     $response = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
         ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
-        'type' => 'group',
+        'type' => 'PublicGroup',
     ]);
 
     $response->assertStatus(422)
@@ -221,7 +221,24 @@ test('user cant create a group chat or channel without a name', function () {
 
     $this->assertDatabaseMissing('chats', [
         'id' => '4',
-        'type' => 'group',
+        'type' => 'PublicGroup',
+    ]);
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
+            'type' => 'PrivateChannel',
+        ]);
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'success' => false,
+            'message' => 'Please enter a name for group or channel',
+        ]);
+
+    $this->assertDatabaseMissing('chats', [
+        'id' => '5',
+        'type' => 'PrivateChannel',
     ]);
 });
 
@@ -250,7 +267,7 @@ test('user can get its chats', function () {
     $response = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
         ->postJson('api/chat/create/' . json_encode([$user2->id, $user3->id]), [
-        'type' => 'group',
+        'type' => 'PrivateGroup',
         'name' => 'test group',
     ]);
 
@@ -265,7 +282,7 @@ test('user can get its chats', function () {
     $response->assertJson([
         'data' => [
             'id' => $chatId,
-            'type' => 'group',
+            'type' => 'PrivateGroup',
             'name' => 'test group',
         ],
         'members' => [$user1->id, $user2->id, $user3->id]
@@ -273,7 +290,7 @@ test('user can get its chats', function () {
 
     $this->assertDatabaseHas('chats', [
         'id' => $chatId,
-        'type' => 'group',
+        'type' => 'PrivateGroup',
     ]);
 
     $this->assertDatabaseHas('chat_members', [
@@ -323,5 +340,117 @@ test('user can get its chats', function () {
         ->assertJson([
             'success' => true,
         ]);
+
+});
+
+test('user can search and get chats that exists', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $user3 = User::factory()->create([
+        'name' => 'mark specter',
+        'email' => 'moon@knight.com',
+        'password' =>Hash::make('Password1236adawd6784!'),
+    ]);
+
+    $token = $user1->createToken('test-token')->plainTextToken;
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode($user2->id), [
+            'type' => 'private',
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'private',
+                'name' => null,
+            ],
+            'members' => [$user1->id , $user2->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'private',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user2->id,
+        'type' => 'PrivateMember',
+    ]);
+
+
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
+            'type' => 'group',
+            'name' => 'group chat 1',
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'group',
+                'name' => 'group chat 1',
+            ],
+            'members' => [$user1->id , $user2->id , $user3->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'group',
+    ]);
+
+
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([]), [
+            'type' => 'channel',
+            'name' => 'mmd',
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'channel',
+                'name' => 'mmd',
+            ],
+            'members' => [$user1->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'channel',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'admin'
+    ]);
+
 
 });

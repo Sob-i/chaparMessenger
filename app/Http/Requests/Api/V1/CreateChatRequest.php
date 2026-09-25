@@ -23,7 +23,7 @@ class CreateChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => 'required|in:private,group,channel',
+            'type' => 'required|in:private,PublicGroup,PrivateGroup,PublicChannel,PrivateChannel',
             'name' => 'nullable|string|min:2|max:255',
         ];
     }
