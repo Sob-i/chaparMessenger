@@ -20,7 +20,7 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::post('api/logout', [AuthController::class, 'logout']);
 
     // search
-    Route::get('api/search', [SearchController::class, 'searchChats']);
+    Route::get('api/search', [SearchController::class, 'search']);
     Route::get('api/chat/{id}/search', [SearchController::class, 'searchChatMessages']);
 
     // chats

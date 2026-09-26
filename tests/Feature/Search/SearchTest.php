@@ -31,6 +31,23 @@ test('user can search and get public chats that exists', function () {
 
     $token = $user1->createToken('test-token')->plainTextToken;
 
+    $data = [
+        'user_name' => 'johnny',
+        'avatar' => fake()->imageUrl(),
+        'bio' => 'lone wolf aooooooooooooooooooooooooooo',
+        'phone' => '09377805100',
+    ];
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson('api/user-profile/edit', [
+            'user_id' => $user1->id ,
+            'user_name' => $data['user_name'],
+            'avatar' => $data['avatar'],
+            'bio' => $data['bio'],
+            'phone' => $data['phone'],
+        ]);
+
     $response = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
         ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
@@ -147,17 +164,56 @@ test('user can search and get public chats that exists', function () {
         ]);
 
     $response->assertStatus(200)
-        ->assertJson([
-            'success' => true,
-            'chats' => [
-                [
-                    'type' => 'PublicGroup',
-                    'name' => 'group mmd 1',
+        ->assertJson(['success' => true,])
+        ->assertJsonStructure([
+            'success',
+            'result' => [
+                'chats' => [
+                    'current_page',
+                    'data' => [
+                        '*' => [
+                            'id',
+                            'type',
+                            'name',
+                            'created_at',
+                            'updated_at',
+                        ],
+                    ],
+                    'total',
+                    'per_page',
                 ],
-                [
-                    'type' => 'PublicChannel',
-                    'name' => 'mmd',
+                'users',
+                'chatMessages',
+            ],
+        ]);
+
+    $response2 = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->getJson('api/search' , [
+            'searchKey' => '@j',
+        ]);
+
+    $response2->assertStatus(200)
+        ->assertJson(['success' => true,])
+        ->assertJsonStructure([
+            'success',
+            'result' => [
+                'chats' => [
+                    'current_page',
+                    'data' => [
+                        '*' => [
+                            'id',
+                            'type',
+                            'name',
+                            'created_at',
+                            'updated_at',
+                        ],
+                    ],
+                    'total',
+                    'per_page',
                 ],
+                'users',
+                'chatMessages',
             ],
         ]);
 });
@@ -313,19 +369,22 @@ test('user can search and get chat messages that is a member of', function () {
     $response->assertStatus(200)
         ->assertJsonStructure([
             'success',
-            'messages' => [
-                '*' => [
-                    'id',
-                    'chat_id',
-                    'sender_id',
-                    'receiver_id',
-                    'message',
-                    'attachments',
-                    'type',
-                    'reply_to_user',
-                    'reply_to_message',
-                    'created_at',
-                    'updated_at',
+                'messages' => [
+                    'current_page',
+                    'data' => [
+                        '*' => [
+                            'id',
+                            'chat_id',
+                            'sender_id',
+                            'receiver_id',
+                            'message',
+                            'attachments',
+                            'type',
+                            'reply_to_user',
+                            'reply_to_message',
+                            'created_at',
+                            'updated_at',
+                        ],
                 ],
             ],
         ]);

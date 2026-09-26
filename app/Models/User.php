@@ -35,4 +35,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserProfileModel::class , 'user_id' , 'id');
     }
+    public function chats()
+    {
+        return $this->belongsToMany(ChatModel::class, 'chat_members', 'user_id', 'chat_id');
+    }
 }

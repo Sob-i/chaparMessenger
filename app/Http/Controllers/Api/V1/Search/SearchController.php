@@ -13,6 +13,31 @@ class SearchController extends Controller
     {
 
     }
+    public function search(Request $request)
+    {
+        $user = $request->user()->load(['chats' => function ($query) {
+            $query->whereIn('chats.type', ['PublicGroup', 'PublicChannel']);
+        }]);
+
+        $data = [
+            'type' => 'chat' ,
+            'searchKey' => $request->headers->get('searchKey') ,
+            'user' => $user
+        ];
+
+        $result = $this->searchServices->Search($data);
+
+        if ($result) {
+            return response()->json([
+                'success' => true,
+                'result' => $result
+            ],200);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'could not find any chats',
+        ],204);
+    }
     public function searchChatMessages(Request $request)
     {
         $data = [
@@ -42,24 +67,6 @@ class SearchController extends Controller
             'message' => 'unauthorized',
         ],401);
     }
-    public function searchChats(Request $request)
-    {
-        $data = [
-            'type' => 'chat' ,
-            'searchKey' => $request->headers->get('searchKey') ,
-        ];
 
-        $result = $this->searchServices->Search($data);
 
-        if ($result->IsNotEmpty()) {
-            return response()->json([
-                'success' => true,
-                'chats' => $result
-            ],200);
-        }
-        return response()->json([
-            'success' => false,
-            'message' => 'could not find any chats',
-        ],204);
-    }
 }
