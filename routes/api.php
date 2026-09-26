@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Chat\ChatMessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\User\UserProfileController;
 use App\Http\Controllers\Api\V1\User\UserSettingController;
+use App\Http\Controllers\Api\V1\Search\SearchController;
 
     // register
     Route::post('api/register', [AuthController::class, 'register']);
@@ -18,17 +19,19 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     // logout
     Route::post('api/logout', [AuthController::class, 'logout']);
 
+    // search
+    Route::get('api/search', [SearchController::class, 'searchChats']);
+    Route::get('api/chat/{id}/search', [SearchController::class, 'searchChatMessages']);
+
     // chats
     Route::get('api/chats', [ChatsController::class, 'getChats']);
     Route::post('api/chat/create/{membersId}', [ChatsController::class, 'createChat']);
-    Route::get('api/chats/search', [ChatsController::class, 'searchChats']);
 
     // chat messages
     Route::get('api/chat/{id}', [ChatMessageController::class, 'getChatMessages']);
     Route::post('api/chat/send-message', [ChatMessageController::class, 'sendMessage']);
     Route::put('api/chat/edit-message', [ChatMessageController::class, 'editMessage']);
     Route::delete('api/chat/delete-message', [ChatMessageController::class, 'deleteMessage']);
-    Route::get('api/chat/{id}/search', [ChatMessageController::class, 'searchChatMessages']);
 
     // user profile
     Route::get('api/user-profile', [UserProfileController::class, 'getProfile']);

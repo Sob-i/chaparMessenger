@@ -76,24 +76,4 @@ class ChatsController extends Controller
             'message' => 'could not find any chats',
         ]);
     }
-    public function searchChats(Request $request)
-    {
-        $data = [
-            'type' => 'chat' ,
-            'searchKey' => $request->headers->get('searchKey') ,
-            ];
-
-        $result = $this->chatServices->Search($data);
-
-        if ($result->IsNotEmpty()) {
-            return response()->json([
-                'success' => true,
-                'chats' => $result
-            ],200);
-        }
-        return response()->json([
-            'success' => false,
-            'message' => 'could not find any chats',
-        ],204);
-    }
 }
