@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\ChatModel;
+use App\Models\GroupOrChannelSettingModel;
 use App\Models\User;
+use App\Observers\ChatObserver;
 use App\Observers\UserProfileObserver;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -23,5 +26,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         User::observe(UserProfileObserver::class);
+        ChatModel::observe(ChatObserver::class);
     }
 }
