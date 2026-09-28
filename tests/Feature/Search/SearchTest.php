@@ -123,7 +123,7 @@ test('user can search and get public chats that exists', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'admin'
+        'type' => 'owner'
     ]);
 
 
@@ -154,7 +154,7 @@ test('user can search and get public chats that exists', function () {
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'admin'
+        'type' => 'owner'
     ]);
 
     $response = $this

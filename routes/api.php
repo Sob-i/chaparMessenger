@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Chat\ChatsController;
 use App\Http\Controllers\Api\V1\Chat\ChatMessageController;
+use App\Http\Controllers\Api\V1\Chat\OneToNChatsSettingsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\User\UserProfileController;
 use App\Http\Controllers\Api\V1\User\UserSettingController;
@@ -41,4 +42,7 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::get('api/user-setting/blocked-users', [UserSettingController::class, 'getBlockedUsers']);
     Route::post('api/user-setting/block-users', [UserSettingController::class, 'blockUser']);
     Route::delete('api/user-setting/unblock-users', [UserSettingController::class, 'unblockUser']);
+
+    // one to N chats setting
+    Route::get('api/one-to-n-settings', [OneToNChatsSettingsController::class, 'getSettings']);
 });

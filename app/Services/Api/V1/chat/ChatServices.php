@@ -59,7 +59,7 @@ class ChatServices
                     'user_id' => $memberId,
                     'type'    => $type === 'private'
                         ? 'PrivateMember'
-                        : ($key === 'user_id' ? 'admin' : 'member'),
+                        : ($key === 'user_id' ? 'owner' : 'member'),
                 ];
             }
         }

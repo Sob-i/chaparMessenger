@@ -142,6 +142,12 @@ test('user can create public group chat with a name', function(){
         'id' => $response->json('data.id'),
         'type' => 'PublicGroup',
     ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'owner'
+    ]);
 });
 
 test('user can create public channel with a name', function(){
@@ -181,7 +187,7 @@ test('user can create public channel with a name', function(){
     $this->assertDatabaseHas('chat_members', [
         'chat_id' => $response->json('data.id'),
         'user_id' => $user1->id,
-        'type' => 'admin'
+        'type' => 'owner'
     ]);
 });
 
