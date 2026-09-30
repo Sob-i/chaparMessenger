@@ -44,5 +44,6 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
     Route::delete('api/user-setting/unblock-users', [UserSettingController::class, 'unblockUser']);
 
     // one to N chats setting
-    Route::get('api/one-to-n-settings', [OneToNChatsSettingsController::class, 'getSettings']);
+    Route::get('api/one-to-n-settings/{id}', [OneToNChatsSettingsController::class, 'getSettings']);
+    Route::put('api/one-to-n-settings/{id}/change-user-to-admin', [OneToNChatsSettingsController::class, 'userToAdmin']);
 });
