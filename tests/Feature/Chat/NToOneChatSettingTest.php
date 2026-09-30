@@ -212,3 +212,94 @@ test('admin or owner can demote existing admin', function(){
     ]);
 });
 
+test('admin or owner can ban member', function () {
+
+    $user1 = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+        'password' =>Hash::make('Password1234!'),
+    ]);
+
+    $user2 = User::factory()->create([
+        'name' => 'illyana Rasputin',
+        'email' => 'Magik@queen.com',
+        'password' =>Hash::make('Password12366784!'),
+    ]);
+
+    $user3 = User::factory()->create([
+        'name' => 'mark specter',
+        'email' => 'moon@knight.com',
+        'password' =>Hash::make('Password1236adawd6784!'),
+    ]);
+
+    $token = $user1->createToken('test-token')->plainTextToken;
+
+    $response = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->postJson('api/chat/create/'. json_encode([$user2->id , $user3->id]), [
+            'type' => 'PublicGroup',
+            'name' => 'test'
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJson([
+            'success' => true,
+            'message' => 'chat created successfully',
+            'data' => [
+                'id' => $response->json('data.id'),
+                'type' => 'PublicGroup',
+                'name' => 'test',
+            ],
+            'members' => [$user1->id , $user2->id , $user3->id]
+        ]);
+
+    $this->assertDatabaseHas('chats', [
+        'id' => $response->json('data.id'),
+        'type' => 'PublicGroup',
+    ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user1->id,
+        'type' => 'owner',
+    ]);
+
+    $chatId = $response->json('data.id');
+
+    $response2 = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->putJson("api/one-to-n-settings/$chatId/change-user-type-status" , ['user_id' => $user2->id , 'type' => 'admin']);
+
+    $response2->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'message' => 'promoted successfully',
+        ]);
+
+    $this->assertDatabaseHas('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user2->id ,
+        'type' => 'admin',
+    ]);
+
+    $response3 = $this
+        ->withHeader('Authorization', 'Bearer ' . $token)
+        ->deleteJson("api/one-to-n-settings/$chatId/ban-user" , ['user_id' => $user3->id]);
+
+    $response3->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'message' => 'member banned successfully',
+        ]);
+
+    $this->assertDatabaseMissing('chat_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user3->id
+    ]);
+
+    $this->assertDatabaseHas('chat_banned_members', [
+        'chat_id' => $response->json('data.id'),
+        'user_id' => $user3->id
+    ]);
+
+});

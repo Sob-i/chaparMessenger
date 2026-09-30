@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\BanMemberRequest;
 use App\Http\Requests\Api\V1\OneToNSettingAdminRequest;
 use App\Models\GroupOrChannelSettingModel;
 use App\Services\Api\V1\chat\ChatSettingServices;
@@ -14,7 +15,6 @@ class OneToNChatsSettingsController extends Controller
     {
 
     }
-
     public function getSettings(Request $request , $chatId)
     {
         $user = $request->user();
@@ -69,5 +69,35 @@ class OneToNChatsSettingsController extends Controller
                 'success' => false,
                 'message' => 'You are not authorized to access this resource'
             ],401);
+    }
+    public function banMember(BanMemberRequest $request , $chatId)
+    {
+        $ownerOrAdmin = $request->user();
+
+        $data = [
+            'ownerOrAdmin' => $ownerOrAdmin->id,
+            'chat_id' => $chatId ,
+            'user_id' => $request->user_id
+        ];
+
+        if ($this->chatSettingServices->IsOwnerOrAdmin($data))
+        {
+            $bannedMember = $this->chatSettingServices->BanMember($data);
+            if ($bannedMember)
+            {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'member banned successfully'
+                ],200);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'something went wrong'
+            ],406);
+        }
+        return response()->json([
+            'success' => false,
+            'message' => 'You are not authorized to access this resource'
+        ],401);
     }
 }
