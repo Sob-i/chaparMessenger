@@ -26,8 +26,8 @@ class ChatSettingServices
     {
         return GroupOrChannelSettingModel::where('chat_id', $chatId)->firstOrFail()->toArray();
     }
-    public function PromoteNewAdmin(array $data)
+    public function ChatAdminStatus(array $data)
     {
-        return ChatMembersModel::where('chat_id' , $data['chat_id'])->where('user_id', $data['user_id'])->update(['type' => 'admin']);
+        return ChatMembersModel::where('chat_id' , $data['chat_id'])->where('user_id', $data['user_id'])->update(['type' => $data['type']]);
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Chat;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\OneToNSettingNewAdminRequest;
+use App\Http\Requests\Api\V1\OneToNSettingAdminRequest;
 use App\Models\GroupOrChannelSettingModel;
 use App\Services\Api\V1\chat\ChatSettingServices;
 use Illuminate\Http\Request;
@@ -37,34 +37,34 @@ class OneToNChatsSettingsController extends Controller
             'message' => 'You are not authorized to access this resource'
         ],401);
     }
-    public function userToAdmin(OneToNSettingNewAdminRequest $request , $chatId)
+    public function chatAdmin(OneToNSettingAdminRequest $request , $chatId)
     {
         $owner = $request->user();
 
         $data = [
             'ownerOrAdmin' => $owner->id,
             'chat_id' => $chatId ,
-            'user_id' => $request->user_id
+            'user_id' => $request->user_id ,
+            'type' => $request->type
         ];
 
-        if ($this->chatSettingServices->IsOwnerOrAdmin($data))
-        {
-            $newAdmin = $this->chatSettingServices->PromoteNewAdmin($data);
-            if ($newAdmin)
+
+            if ($this->chatSettingServices->IsOwnerOrAdmin($data))
             {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'promoted successfully'
-                ],200);
+                $user = $this->chatSettingServices->ChatAdminStatus($data);
+
+                if ($user)
+                {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $data['type'] == 'admin' ? 'promoted successfully' : 'demoted successfully'
+                    ],200);
+                }
             }
+
             return response()->json([
                 'success' => false,
-                'message' => 'something went wrong'
-            ],406);
-        }
-        return response()->json([
-            'success' => false,
-            'message' => 'You are not authorized to access this resource'
-        ],401);
+                'message' => 'You are not authorized to access this resource'
+            ],401);
     }
 }

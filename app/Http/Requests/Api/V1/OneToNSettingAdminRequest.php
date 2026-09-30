@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\V1;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class OneToNSettingNewAdminRequest extends FormRequest
+class OneToNSettingAdminRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,6 +24,7 @@ class OneToNSettingNewAdminRequest extends FormRequest
     {
         return [
             'user_id' => 'required|integer|exists:users,id',
+            'type' => 'required|in:admin,member',
         ];
     }
 }
