@@ -45,6 +45,5 @@ Route::prefix('')->middleware('auth:sanctum')->group(function () {
 
     // one to N chats setting
     Route::get('api/one-to-n-settings/{id}', [OneToNChatsSettingsController::class, 'getSettings']);
-    Route::put('api/one-to-n-settings/{id}/change-user-to-admin', [OneToNChatsSettingsController::class, 'chatAdmin']);
-    Route::put('api/one-to-n-settings/{id}/change-admin-to-user', [OneToNChatsSettingsController::class, 'chatAdmin']);
+    Route::put('api/one-to-n-settings/{id}/change-user-type-status', [OneToNChatsSettingsController::class, 'chatAdmin']);
 });

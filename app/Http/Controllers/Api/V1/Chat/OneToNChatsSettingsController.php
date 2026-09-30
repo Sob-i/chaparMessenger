@@ -48,7 +48,6 @@ class OneToNChatsSettingsController extends Controller
             'type' => $request->type
         ];
 
-
             if ($this->chatSettingServices->IsOwnerOrAdmin($data))
             {
                 $user = $this->chatSettingServices->ChatAdminStatus($data);
@@ -60,6 +59,10 @@ class OneToNChatsSettingsController extends Controller
                         'message' => $data['type'] == 'admin' ? 'promoted successfully' : 'demoted successfully'
                     ],200);
                 }
+                return response()->json([
+                    'success' => false,
+                    'message' => 'something went wrong'
+                ]);
             }
 
             return response()->json([

@@ -122,7 +122,7 @@ test('admin or owner can promote new admin', function(){
 
     $response2 = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
-        ->putJson("api/one-to-n-settings/$chatId/change-user-to-admin" , ['user_id' => $user2->id , 'type' => 'admin']);
+        ->putJson("api/one-to-n-settings/$chatId/change-user-type-status" , ['user_id' => $user2->id , 'type' => 'admin']);
 
     $response2->assertStatus(200)
         ->assertJson([
@@ -187,7 +187,7 @@ test('admin or owner can demote existing admin', function(){
 
     $response2 = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
-        ->putJson("api/one-to-n-settings/$chatId/change-user-to-admin" , ['user_id' => $user2->id , 'type' => 'admin']);
+        ->putJson("api/one-to-n-settings/$chatId/change-user-type-status" , ['user_id' => $user2->id , 'type' => 'admin']);
 
     $response2->assertStatus(200)
         ->assertJson([
@@ -197,7 +197,7 @@ test('admin or owner can demote existing admin', function(){
 
     $response3 = $this
         ->withHeader('Authorization', 'Bearer ' . $token)
-        ->putJson("api/one-to-n-settings/$chatId/change-user-to-admin" , ['user_id' => $user2->id , 'type' => 'member']);
+        ->putJson("api/one-to-n-settings/$chatId/change-user-type-status" , ['user_id' => $user2->id , 'type' => 'member']);
 
     $response3->assertStatus(200)
         ->assertJson([
